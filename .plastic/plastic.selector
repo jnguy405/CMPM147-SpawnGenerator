@@ -1,0 +1,4 @@
+repository "CMPM147-SpawnGenerator/CMPM147-SpawnGenerator@20067548144883@cloud"
+  path "/"
+    br "/main"
+    co "/main"
