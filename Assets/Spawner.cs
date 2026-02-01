@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 public class Spawner : MonoBehaviour {
     [Header("Spawn Object")]
@@ -8,13 +9,13 @@ public class Spawner : MonoBehaviour {
     
     [Header("Spawn Parameters")]
     [Tooltip("Total number of objects to spawn")]
+    [Range(1, 500)]
     public int totalObjects = 20;
     
     [Header("Cluster Settings")]
     [Tooltip("Fixed number of clusters (0 = use dynamic distribution)")]
     [Range(0, 20)]
     public int fixedClusterCount = 0;
-    
     
     [Tooltip("Dynamic cluster count range")]
     public Vector2Int dynamicClusterRange = new Vector2Int(3, 6);
@@ -34,6 +35,7 @@ public class Spawner : MonoBehaviour {
     public Vector3 placementAreaSize = new Vector3(50, 10, 50);
     
     [Tooltip("Minimum distance between cluster centers")]
+    [Range(1f, 50f)]
     public float minClusterDistance = 10f;
     
     [Tooltip("Cluster radius variability (0-1)")]
@@ -63,6 +65,21 @@ public class Spawner : MonoBehaviour {
     [Header("Exclusion Zones")]
     public List<ExclusionZone> exclusionZones = new List<ExclusionZone>();
     
+    [Header("Layer Exclusion System")]
+    [Tooltip("Toggle to enable layer-based exclusion")]
+    public bool useLayerExclusion = true;
+    
+    [Tooltip("List of all layers with toggle for exclusion")]
+    public LayerExclusion[] layerExclusions = new LayerExclusion[32];
+    
+    [Tooltip("Minimum distance from excluded objects")]
+    [Range(0f, 10f)]
+    public float exclusionBuffer = 1f;
+    
+    [Tooltip("Check size for exclusion detection")]
+    [Range(0.1f, 5f)]
+    public float exclusionCheckRadius = 0.5f;
+    
     [Header("Randomization")]
     public int randomSeed = 0;
     public bool useRandomSeed = false;
@@ -70,9 +87,11 @@ public class Spawner : MonoBehaviour {
     [Header("Debug Visualization")]
     public bool showDebugGizmos = true;
     public bool showGroundRays = true;
+    public bool showLayerExclusionGizmos = false;
     public Color placementAreaColor = new Color(0, 1, 0, 0.2f);
     public Color clusterCenterColor = Color.red;
     public Color exclusionZoneColor = new Color(1, 0, 0, 0.3f);
+    public Color layerExclusionColor = new Color(1, 0.5f, 0, 0.4f);
     public Color groundRayColor = Color.blue;
     
     [Header("Object Management")]
@@ -82,6 +101,7 @@ public class Spawner : MonoBehaviour {
     private List<Vector3> clusterCenters = new List<Vector3>();
     private List<List<Vector3>> clusterPositions = new List<List<Vector3>>();
     private List<GameObject> spawnedObjects = new List<GameObject>();
+    private int excludedLayerMask = 0;
     
     [System.Serializable]
     public class ExclusionZone {
@@ -90,8 +110,25 @@ public class Spawner : MonoBehaviour {
         public string zoneName = "Exclusion Zone";
     }
     
+    [System.Serializable]
+    public class LayerExclusion {
+        public string layerName;
+        public bool excludeFromSpawn = false;
+        public int layerIndex;
+        
+        public LayerExclusion(string name, int index) {
+            layerName = name;
+            layerIndex = index;
+        }
+    }
+    
     void Start() {
         InitializeRandom();
+        InitializeLayerExclusions();
+    }
+    
+    void OnValidate() {
+        InitializeLayerExclusions();
     }
     
     private void InitializeRandom() {
@@ -103,6 +140,43 @@ public class Spawner : MonoBehaviour {
         }
     }
     
+    private void InitializeLayerExclusions() {
+        // Populate layer exclusions array with all Unity layers
+        if (layerExclusions == null || layerExclusions.Length != 32) {
+            layerExclusions = new LayerExclusion[32];
+        }
+        
+        for (int i = 0; i < 32; i++) {
+            string layerName = LayerMask.LayerToName(i);
+            if (string.IsNullOrEmpty(layerName)) {
+                layerName = $"Layer {i} (Unused)";
+            }
+            
+            if (layerExclusions[i] == null) {
+                layerExclusions[i] = new LayerExclusion(layerName, i);
+            }
+            else {
+                layerExclusions[i].layerName = layerName;
+                layerExclusions[i].layerIndex = i;
+            }
+        }
+        
+        // Update excluded layer mask
+        UpdateExcludedLayerMask();
+    }
+    
+    private void UpdateExcludedLayerMask() {
+        excludedLayerMask = 0;
+        
+        if (!useLayerExclusion || layerExclusions == null) return;
+        
+        foreach (var layerExclusion in layerExclusions) {
+            if (layerExclusion != null && layerExclusion.excludeFromSpawn) {
+                excludedLayerMask |= 1 << layerExclusion.layerIndex;
+            }
+        }
+    }
+    
     public void SpawnClusteredObjects() {
         ClearPreviousSpawns();
         clusterCenters.Clear();
@@ -110,6 +184,7 @@ public class Spawner : MonoBehaviour {
         spawnedObjects.Clear();
         
         if (random == null) InitializeRandom();
+        UpdateExcludedLayerMask();
         
         int clusterCount = fixedClusterCount > 0 ? fixedClusterCount : 
                           random.Next(dynamicClusterRange.x, dynamicClusterRange.y + 1);
@@ -133,7 +208,7 @@ public class Spawner : MonoBehaviour {
             }
         }
         
-        Debug.Log($"Spawned {totalObjects} objects in {clusterCount} clusters");
+        Debug.Log($"Spawned {totalObjects} objects in {clusterCount} clusters. Excluded layers mask: {excludedLayerMask}");
     }
     
     public void SpawnSphere() {
@@ -206,6 +281,27 @@ public class Spawner : MonoBehaviour {
         }
     }
     
+    private bool IsPositionValidByLayer(Vector3 position) {
+        if (!useLayerExclusion || excludedLayerMask == 0) return true;
+        
+        // Check if position is on an excluded layer
+        Collider[] colliders = Physics.OverlapSphere(position, exclusionCheckRadius, excludedLayerMask);
+        
+        if (colliders.Length > 0) {
+            return false;
+        }
+        
+        // Check buffer distance from excluded objects
+        if (exclusionBuffer > 0) {
+            colliders = Physics.OverlapSphere(position, exclusionBuffer, excludedLayerMask);
+            if (colliders.Length > 0) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
     private void GenerateClusterCenters(int clusterCount) {
         int maxAttempts = 100;
         
@@ -227,6 +323,12 @@ public class Spawner : MonoBehaviour {
                     if (IsPointInBox(candidate, zone.center, zone.size)) {
                         validPosition = false;
                         break;
+                    }
+                }
+                
+                if (validPosition && useLayerExclusion && excludedLayerMask != 0) {
+                    if (!IsPositionValidByLayer(candidate)) {
+                        validPosition = false;
                     }
                 }
                 
@@ -286,23 +388,46 @@ public class Spawner : MonoBehaviour {
     
     private List<Vector3> GenerateClusterPositions(Vector3 center, int count, float radius) {
         List<Vector3> positions = new List<Vector3>();
+        int maxAttemptsPerPosition = 20;
         
         for (int i = 0; i < count; i++) {
-            Vector2 randomCircle = UnityEngine.Random.insideUnitCircle * radius;
-            Vector3 randomOffset = new Vector3(randomCircle.x, 0, randomCircle.y);
+            Vector3 position;
+            bool validPosition;
+            int attempts = 0;
             
-            Vector3 position = center + randomOffset;
+            do {
+                attempts++;
+                validPosition = true;
+                
+                Vector2 randomCircle = UnityEngine.Random.insideUnitCircle * radius;
+                Vector3 randomOffset = new Vector3(randomCircle.x, 0, randomCircle.y);
+                
+                position = center + randomOffset;
+                
+                position.x = Mathf.Clamp(position.x, 
+                    placementCenter.x - placementAreaSize.x / 2, 
+                    placementCenter.x + placementAreaSize.x / 2);
+                position.z = Mathf.Clamp(position.z, 
+                    placementCenter.z - placementAreaSize.z / 2, 
+                    placementCenter.z + placementAreaSize.z / 2);
+                
+                if (useLayerExclusion && excludedLayerMask != 0 && !IsPositionValidByLayer(position)) {
+                    validPosition = false;
+                    if (attempts >= maxAttemptsPerPosition) {
+                        Debug.LogWarning($"Could not find valid position in cluster, skipping object");
+                        break;
+                    }
+                    continue;
+                }
+                
+                position = GetGroundAdjustedPosition(position);
+                validPosition = true;
+                
+            } while (!validPosition && attempts < maxAttemptsPerPosition);
             
-            position.x = Mathf.Clamp(position.x, 
-                placementCenter.x - placementAreaSize.x / 2, 
-                placementCenter.x + placementAreaSize.x / 2);
-            position.z = Mathf.Clamp(position.z, 
-                placementCenter.z - placementAreaSize.z / 2, 
-                placementCenter.z + placementAreaSize.z / 2);
-            
-            position = GetGroundAdjustedPosition(position);
-            
-            positions.Add(position);
+            if (validPosition) {
+                positions.Add(position);
+            }
         }
         
         return positions;
@@ -323,6 +448,19 @@ public class Spawner : MonoBehaviour {
         Gizmos.color = exclusionZoneColor;
         foreach (var zone in exclusionZones) {
             Gizmos.DrawWireCube(zone.center, zone.size);
+        }
+        
+        if (showLayerExclusionGizmos && useLayerExclusion) {
+            Gizmos.color = layerExclusionColor;
+            foreach (Vector3 center in clusterCenters) {
+                Gizmos.DrawWireSphere(center, exclusionBuffer);
+            }
+            
+            foreach (List<Vector3> cluster in clusterPositions) {
+                foreach (Vector3 pos in cluster) {
+                    Gizmos.DrawWireSphere(pos, exclusionCheckRadius);
+                }
+            }
         }
         
         Gizmos.color = clusterCenterColor;
