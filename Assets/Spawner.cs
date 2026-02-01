@@ -12,12 +12,15 @@ public class Spawner : MonoBehaviour {
     
     [Header("Cluster Settings")]
     [Tooltip("Fixed number of clusters (0 = use dynamic distribution)")]
+    [Range(0, 20)]
     public int fixedClusterCount = 0;
+    
     
     [Tooltip("Dynamic cluster count range")]
     public Vector2Int dynamicClusterRange = new Vector2Int(3, 6);
     
     [Tooltip("Objects per cluster (if using fixed clusters)")]
+    [Range(0, 20)]
     public int objectsPerCluster = 5;
     
     [Tooltip("Dynamic objects per cluster range")]
@@ -38,19 +41,23 @@ public class Spawner : MonoBehaviour {
     public float clusterRadiusVariability = 0.3f;
     
     [Tooltip("Base radius for object placement within cluster")]
+    [Range(0f, 10f)]
     public float clusterBaseRadius = 5f;
     
     [Header("Ground Detection")]
     [Tooltip("Minimum height above ground")]
+    [Range(0f, 10f)]
     public float minHeightAboveGround = 1f;
     
     [Tooltip("Maximum height above ground")]
+    [Range(0f, 50f)]
     public float maxHeightAboveGround = 5f;
     
     [Tooltip("Layer mask for ground detection")]
     public LayerMask groundLayer = -1;
     
     [Tooltip("If no ground is found, use this fallback height")]
+    [Range(0f, 20f)]
     public float fallbackSpawnHeight = 10f;
     
     [Header("Exclusion Zones")]
