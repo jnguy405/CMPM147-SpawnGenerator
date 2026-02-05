@@ -4,36 +4,35 @@ using System.Collections.Generic;
 
 public class Spawner : MonoBehaviour {
     [Header("Spawn Object")]
-    public GameObject mySphere;
+    public GameObject myObject;
     
     [Header("Spawn Parameters")]
     [Tooltip("Total number of objects to spawn")]
-    [Range(1, 500)]
     public int totalObjects = 20;
     
     [Header("Cluster Settings")]
     [Tooltip("Fixed number of clusters (0 = use dynamic distribution)")]
     [Range(0, 20)]
     public int fixedClusterCount = 0;
-    
-    [Tooltip("Dynamic cluster count range")]
-    public Vector2Int dynamicClusterRange = new Vector2Int(3, 6);
-    
+
     [Tooltip("Objects per cluster (if using fixed clusters)")]
     [Range(0, 20)]
     public int objectsPerCluster = 5;
     
-    [Tooltip("Dynamic objects per cluster range")]
-    public Vector2Int dynamicObjectsPerCluster = new Vector2Int(3, 8);
+    [Tooltip("Cluster count range (randomized within a range)")]
+    public Vector2Int ClusterRange = new Vector2Int(3, 6);
+    
+    [Tooltip("Objects per cluster (randomized within a range)")]
+    public Vector2Int ObjectsPerClusterRange = new Vector2Int(3, 8);
     
     [Header("Spatial Constraints")]
-    [Tooltip("Center of the placement area")]
+    [Tooltip("Center of the placement area (Map)")]
     public Vector3 placementCenter = Vector3.zero;
     
     [Tooltip("Size of the placement area")]
     public Vector3 placementAreaSize = new Vector3(50, 10, 50);
     
-    [Tooltip("Minimum distance between cluster centers")]
+    [Tooltip("Minimum distance between each cluster (from centers)")]
     [Range(1f, 50f)]
     public float minClusterDistance = 10f;
     
@@ -41,23 +40,23 @@ public class Spawner : MonoBehaviour {
     [Range(0f, 1f)]
     public float clusterRadiusVariability = 0.3f;
     
-    [Tooltip("Base radius for object placement within cluster")]
+    [Tooltip("Base radius between object placement within cluster")]
     [Range(0f, 10f)]
     public float clusterBaseRadius = 5f;
     
     [Header("Ground Detection")]
-    [Tooltip("Minimum height above ground")]
-    [Range(0f, 10f)]
+    [Tooltip("Minimum height above ground. Objects will spawn at least this far above the ground.")]
+    [Range(0.1f, 10f)]
     public float minHeightAboveGround = 1f;
     
-    [Tooltip("Maximum height above ground")]
-    [Range(0f, 50f)]
+    [Tooltip("Maximum height above ground. Objects will spawn no more than this far above the ground. Must be >= Min Height.")]
+    [Range(0.1f, 50f)]
     public float maxHeightAboveGround = 5f;
     
-    [Tooltip("Layer mask for ground detection")]
+    [Tooltip("Layer mask for ground detection. Only objects on these layers are considered valid ground.")]
     public LayerMask groundLayer = -1;
     
-    [Tooltip("If no ground is found, use this fallback height")]
+    [Tooltip("If no ground is found, objects are spawned at this fallback height. If disabled (layerMask is nothing), objects spawn at this height regardless.")]
     [Range(0f, 20f)]
     public float fallbackSpawnHeight = 10f;
     
@@ -91,6 +90,7 @@ public class Spawner : MonoBehaviour {
     private List<List<Vector3>> clusterPositions = new List<List<Vector3>>();
     private List<GameObject> spawnedObjects = new List<GameObject>();
     private int excludedLayerMask = 0;
+    private bool areaConstraintViolated = false;
     
     [System.Serializable]
     public class ExclusionZone {
@@ -113,6 +113,30 @@ public class Spawner : MonoBehaviour {
     
     void OnValidate() {
         InitializeLayerExclusions();
+        ValidateHeightParameters();
+        ValidateClusterParameters();
+    }
+    
+    private void ValidateHeightParameters() {
+        // Ensure min height doesn't exceed max height
+        if (minHeightAboveGround > maxHeightAboveGround) {
+            maxHeightAboveGround = minHeightAboveGround;
+        }
+        
+        // Ensure max height doesn't go below min height
+        if (maxHeightAboveGround < minHeightAboveGround) {
+            minHeightAboveGround = maxHeightAboveGround;
+        }
+    }
+    
+    private void ValidateClusterParameters() {
+        // If using fixed clusters, ensure totalObjects is at least as many as fixedClusterCount * objectsPerCluster
+        if (fixedClusterCount > 0 && objectsPerCluster > 0) {
+            int requiredObjects = fixedClusterCount * objectsPerCluster;
+            if (totalObjects < requiredObjects) {
+                totalObjects = requiredObjects;
+            }
+        }
     }
     
     private void InitializeRandom() {
@@ -162,19 +186,35 @@ public class Spawner : MonoBehaviour {
         ClearPreviousSpawns();
         clusterCenters.Clear();
         clusterPositions.Clear();
+        areaConstraintViolated = false;
         
         if (random == null) InitializeRandom();
         UpdateExcludedLayerMask();
+        ValidateHeightParameters();
+        ValidateClusterParameters();
         
         int clusterCount = fixedClusterCount > 0 ? fixedClusterCount : 
-                          random.Next(dynamicClusterRange.x, dynamicClusterRange.y + 1);
+                          random.Next(ClusterRange.x, ClusterRange.y + 1);
         
-        GenerateClusterCenters(clusterCount);
+        // Calculate actual cluster count including remainder cluster if needed
+        int actualClusterCount = clusterCount;
+        if (fixedClusterCount > 0 && (totalObjects % objectsPerCluster) != 0) {
+            actualClusterCount++; // Add extra cluster for remainder objects
+        }
+        
+        GenerateClusterCenters(actualClusterCount);
+        
+        // Warn if placement area is too small
+        if (areaConstraintViolated) {
+            Debug.LogWarning($"Placement area is too small for {actualClusterCount} clusters with minimum distance {minClusterDistance}. " +
+                           $"Consider: (1) Increasing Placement Area Size, (2) Decreasing Cluster Base Radius, " +
+                           $"(3) Reducing Cluster Count, or (4) Decreasing Min Cluster Distance.");
+        }
         
         List<int> objectsPerClusterList = DistributeObjectsToClusters(clusterCount);
         int totalSpawned = 0;
         
-        for (int i = 0; i < clusterCount; i++) {
+        for (int i = 0; i < objectsPerClusterList.Count; i++) {
             float radius = clusterBaseRadius * (1 + (float)random.NextDouble() * clusterRadiusVariability);
             List<Vector3> positions = GenerateClusterPositions(
                 clusterCenters[i], 
@@ -190,7 +230,7 @@ public class Spawner : MonoBehaviour {
             }
         }
         
-        Debug.Log($"Spawned {totalSpawned} objects in {clusterCount} clusters.");
+        Debug.Log($"Spawned {totalSpawned} objects in {objectsPerClusterList.Count} clusters.");
     }
     
     public void SpawnSphere() {
@@ -203,12 +243,12 @@ public class Spawner : MonoBehaviour {
     }
     
     private void SpawnObjectAtPosition(Vector3 position) {
-        if (mySphere == null) {
+        if (myObject == null) {
             Debug.LogError("No spawn object assigned!");
             return;
         }
         
-        GameObject spawnedObj = Instantiate(mySphere, position, Quaternion.identity);
+        GameObject spawnedObj = Instantiate(myObject, position, Quaternion.identity);
         
         if (spawnedObj.GetComponent<Rigidbody>() == null) {
             Rigidbody rb = spawnedObj.AddComponent<Rigidbody>();
@@ -323,7 +363,7 @@ public class Spawner : MonoBehaviour {
                 }
                 
                 if (attempts > maxAttempts) {
-                    Debug.LogWarning($"Could not find valid position for cluster {i}, placing anyway");
+                    areaConstraintViolated = true;
                     validPosition = true;
                 }
             }
@@ -345,11 +385,21 @@ public class Spawner : MonoBehaviour {
         List<int> distribution = new List<int>();
         
         if (fixedClusterCount > 0) {
+            // Fixed cluster count with fixed objects per cluster
+            int objectsAllocated = clusterCount * objectsPerCluster;
+            int remainingObjects = totalObjects - objectsAllocated;
+            
             for (int i = 0; i < clusterCount; i++) {
                 distribution.Add(objectsPerCluster);
             }
+            
+            // Handle remainder: spawn leftover objects in an additional cluster
+            if (remainingObjects > 0) {
+                distribution.Add(remainingObjects);
+            }
         }
         else {
+            // Dynamic cluster distribution
             int remainingObjects = totalObjects;
             
             for (int i = 0; i < clusterCount; i++) {
@@ -357,8 +407,8 @@ public class Spawner : MonoBehaviour {
                     distribution.Add(remainingObjects);
                 }
                 else {
-                    int min = Mathf.Max(1, dynamicObjectsPerCluster.x);
-                    int max = Mathf.Min(dynamicObjectsPerCluster.y, remainingObjects - (clusterCount - i - 1));
+                    int min = Mathf.Max(1, ObjectsPerClusterRange.x);
+                    int max = Mathf.Min(ObjectsPerClusterRange.y, remainingObjects - (clusterCount - i - 1));
                     
                     int clusterObjects = random.Next(min, max + 1);
                     distribution.Add(clusterObjects);
