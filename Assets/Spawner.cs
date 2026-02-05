@@ -387,12 +387,20 @@ public class Spawner : MonoBehaviour {
         if (fixedClusterCount > 0) {
             // Fixed cluster count with fixed objects per cluster
             int objectsAllocated = clusterCount * objectsPerCluster;
+
+            // If the product of clusters * objects per cluster exceeds totalObjects,
+            // auto-adjust totalObjects upward to reflect the actual number that will be spawned.
+            if (objectsAllocated > totalObjects) {
+                totalObjects = objectsAllocated;
+                Debug.LogWarning($"totalObjects was increased to {totalObjects} to match fixed clusters ({clusterCount} * {objectsPerCluster}).");
+            }
+
             int remainingObjects = totalObjects - objectsAllocated;
-            
+
             for (int i = 0; i < clusterCount; i++) {
                 distribution.Add(objectsPerCluster);
             }
-            
+
             // Handle remainder: spawn leftover objects in an additional cluster
             if (remainingObjects > 0) {
                 distribution.Add(remainingObjects);
