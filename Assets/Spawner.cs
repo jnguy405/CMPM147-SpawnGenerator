@@ -1,3 +1,36 @@
+/* ------------------------------------------------------------
+- Jenalee Nguyen - 2026
+- jnguy405@ucsc.edu
+---------------------------------------------------------------   
+   Function Summary (grouped by TAG)
+
+   MAP:
+   - ValidateHeightParameters()
+   - GetGroundAdjustedPosition(Vector3)
+   - GetGroundAdjustedPosition(Vector3, out bool)
+
+   CLUSTER:
+   - ValidateClusterParameters()
+   - GenerateClusterCenters(int)
+   - DistributeObjectsToClusters(int)
+   - GenerateClusterPositions(Vector3, int, float)
+
+   OBJECT:
+   - SpawnClusteredObjects()
+   - SpawnObject()
+   - SpawnObjectAtPosition(Vector3)
+   - ClearPreviousSpawns()
+
+   DEBUG:
+   - OnDrawGizmosSelected()
+   - UpdateExcludedLayerMask()
+
+   UTIL / MISC:
+   - InitializeRandom()
+   - InitializeLayerExclusions()
+   - IsPointInBox(Vector3, Vector3, Vector3)
+ ------------------------------------------------------------- */
+
 using UnityEngine;
 using System;
 using System.Collections.Generic;
@@ -30,7 +63,7 @@ public class Spawner : MonoBehaviour {
         ValidateClusterParameters();
     }
 
-    // Checks if height parameters are valid and adjusts them if necessary
+    // MAP: Checks if height parameters are valid and adjusts them if necessary
     private void ValidateHeightParameters() {
         if (config.minHeightAboveGround > config.maxHeightAboveGround) {
             config.maxHeightAboveGround = config.minHeightAboveGround;
@@ -41,7 +74,7 @@ public class Spawner : MonoBehaviour {
         }
     }
 
-    // Checks cluster parameters and adjusts total objects if necessary
+    // CLUSTER: Checks cluster parameters and adjusts total objects if necessary
     private void ValidateClusterParameters() {
         if (config.fixedClusterCount > 0 && config.objectsPerCluster > 0) {
             int requiredObjects = config.fixedClusterCount * config.objectsPerCluster;
@@ -102,7 +135,7 @@ public class Spawner : MonoBehaviour {
         }
     }
 
-    // OBJECT: Main method to spawn clustered objects based on configuration
+    // CLUSTER: Main method to spawn clustered objects based on configuration
     public void SpawnClusteredObjects() {
         // Reset previous state
         ClearPreviousSpawns();
@@ -199,13 +232,13 @@ public class Spawner : MonoBehaviour {
         spawnedObjects.Clear();
     }
 
-    // MAP/OBJECT: Adjusts the given position to align with the ground using raycasting
+    // MAP: Adjusts the given position to align with the ground using raycasting
     private Vector3 GetGroundAdjustedPosition(Vector3 originalPosition) {
         bool hitExcluded;
         return GetGroundAdjustedPosition(originalPosition, out hitExcluded);
     }
 
-    // MAP/OBJECT: Adjusts based on ground raycast, checks for excluded layers
+    // MAP: Adjusts based on ground raycast, checks for excluded layers
     private Vector3 GetGroundAdjustedPosition(Vector3 originalPosition, out bool hitExcludedLayer) {
         Vector3 raycastStart = originalPosition + Vector3.up * 100f;
         hitExcludedLayer = false;
@@ -419,7 +452,7 @@ public class Spawner : MonoBehaviour {
                Mathf.Abs(point.z - boxCenter.z) <= boxSize.z / 2;
     }
 
-    // GIZMOS: Visualizes placement area, exclusion zones, cluster centers, and object positions
+    // DEBUG: Visualizes placement area, exclusion zones, cluster centers, and object positions
     void OnDrawGizmosSelected() {
         if (!config.showDebugGizmos) return;
 
