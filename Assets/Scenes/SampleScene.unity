@@ -474,7 +474,6 @@ GameObject:
   - component: {fileID: 493403245}
   - component: {fileID: 493403244}
   - component: {fileID: 493403243}
-  - component: {fileID: 493403247}
   m_Layer: 3
   m_Name: Base
   m_TagString: Untagged
@@ -576,18 +575,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &493403247
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 493403242}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6cba2e558e3cc0a47b256dc19d991c4a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: '::'
 --- !u!1 &790257531
 GameObject:
   m_ObjectHideFlags: 0
@@ -805,131 +792,132 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2e20d07cfa45964b98a822f03e095e5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  mySphere: {fileID: 1159548151133589417, guid: 5a014398365ddd845ad803f75c0ef1f1, type: 3}
-  totalObjects: 31
-  fixedClusterCount: 2
-  dynamicClusterRange: {x: 3, y: 6}
-  objectsPerCluster: 5
-  dynamicObjectsPerCluster: {x: 3, y: 8}
-  placementCenter: {x: 0, y: 0, z: 0}
-  placementAreaSize: {x: 50, y: 10, z: 50}
-  minClusterDistance: 5.9
-  clusterRadiusVariability: 1
-  clusterBaseRadius: 8.85
-  minHeightAboveGround: 0
-  maxHeightAboveGround: 15.8
-  groundLayer:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  fallbackSpawnHeight: 10
-  exclusionZones: []
-  useLayerExclusion: 1
-  layerExclusions:
-  - layerName: Default
-    excludeFromSpawn: 0
-    layerIndex: 0
-  - layerName: TransparentFX
-    excludeFromSpawn: 0
-    layerIndex: 1
-  - layerName: Ignore Raycast
-    excludeFromSpawn: 0
-    layerIndex: 2
-  - layerName: Ground
-    excludeFromSpawn: 0
-    layerIndex: 3
-  - layerName: Water
-    excludeFromSpawn: 0
-    layerIndex: 4
-  - layerName: UI
-    excludeFromSpawn: 0
-    layerIndex: 5
-  - layerName: Layer 6 (Unused)
-    excludeFromSpawn: 0
-    layerIndex: 6
-  - layerName: Layer 7 (Unused)
-    excludeFromSpawn: 0
-    layerIndex: 7
-  - layerName: Layer 8 (Unused)
-    excludeFromSpawn: 0
-    layerIndex: 8
-  - layerName: Layer 9 (Unused)
-    excludeFromSpawn: 0
-    layerIndex: 9
-  - layerName: Layer 10 (Unused)
-    excludeFromSpawn: 0
-    layerIndex: 10
-  - layerName: Layer 11 (Unused)
-    excludeFromSpawn: 0
-    layerIndex: 11
-  - layerName: Layer 12 (Unused)
-    excludeFromSpawn: 0
-    layerIndex: 12
-  - layerName: Layer 13 (Unused)
-    excludeFromSpawn: 0
-    layerIndex: 13
-  - layerName: Layer 14 (Unused)
-    excludeFromSpawn: 0
-    layerIndex: 14
-  - layerName: Layer 15 (Unused)
-    excludeFromSpawn: 0
-    layerIndex: 15
-  - layerName: Layer 16 (Unused)
-    excludeFromSpawn: 0
-    layerIndex: 16
-  - layerName: Layer 17 (Unused)
-    excludeFromSpawn: 0
-    layerIndex: 17
-  - layerName: Layer 18 (Unused)
-    excludeFromSpawn: 0
-    layerIndex: 18
-  - layerName: Layer 19 (Unused)
-    excludeFromSpawn: 0
-    layerIndex: 19
-  - layerName: Layer 20 (Unused)
-    excludeFromSpawn: 0
-    layerIndex: 20
-  - layerName: Layer 21 (Unused)
-    excludeFromSpawn: 0
-    layerIndex: 21
-  - layerName: Layer 22 (Unused)
-    excludeFromSpawn: 0
-    layerIndex: 22
-  - layerName: Layer 23 (Unused)
-    excludeFromSpawn: 0
-    layerIndex: 23
-  - layerName: Layer 24 (Unused)
-    excludeFromSpawn: 0
-    layerIndex: 24
-  - layerName: Layer 25 (Unused)
-    excludeFromSpawn: 0
-    layerIndex: 25
-  - layerName: Layer 26 (Unused)
-    excludeFromSpawn: 0
-    layerIndex: 26
-  - layerName: Layer 27 (Unused)
-    excludeFromSpawn: 0
-    layerIndex: 27
-  - layerName: Layer 28 (Unused)
-    excludeFromSpawn: 0
-    layerIndex: 28
-  - layerName: Layer 29 (Unused)
-    excludeFromSpawn: 0
-    layerIndex: 29
-  - layerName: Layer 30 (Unused)
-    excludeFromSpawn: 0
-    layerIndex: 30
-  - layerName: Layer 31 (Unused)
-    excludeFromSpawn: 0
-    layerIndex: 31
-  randomSeed: 0
-  useRandomSeed: 0
-  showDebugGizmos: 1
-  showGroundRays: 1
-  placementAreaColor: {r: 0, g: 1, b: 0, a: 0.2}
-  clusterCenterColor: {r: 1, g: 0, b: 0, a: 1}
-  exclusionZoneColor: {r: 1, g: 0, b: 0, a: 0.3}
-  groundRayColor: {r: 0, g: 0, b: 1, a: 1}
-  destroyPreviousSpawns: 1
+  config:
+    myObject: {fileID: 0}
+    totalObjects: 20
+    fixedClusterCount: 0
+    objectsPerCluster: 5
+    ClusterRange: {x: 3, y: 6}
+    ObjectsPerClusterRange: {x: 3, y: 8}
+    placementCenter: {x: 0, y: 0, z: 0}
+    placementAreaSize: {x: 50, y: 10, z: 50}
+    minClusterDistance: 10
+    clusterRadiusVariability: 0.3
+    clusterBaseRadius: 5
+    minHeightAboveGround: 1
+    maxHeightAboveGround: 5
+    groundLayer:
+      serializedVersion: 2
+      m_Bits: 4294967295
+    fallbackSpawnHeight: 10
+    exclusionZones: []
+    useLayerExclusion: 1
+    layerExclusions:
+    - layerName: Default
+      excludeFromSpawn: 0
+      layerIndex: 0
+    - layerName: TransparentFX
+      excludeFromSpawn: 0
+      layerIndex: 1
+    - layerName: Ignore Raycast
+      excludeFromSpawn: 0
+      layerIndex: 2
+    - layerName: Ground
+      excludeFromSpawn: 0
+      layerIndex: 3
+    - layerName: Water
+      excludeFromSpawn: 0
+      layerIndex: 4
+    - layerName: UI
+      excludeFromSpawn: 0
+      layerIndex: 5
+    - layerName: Layer 6 (Unused)
+      excludeFromSpawn: 0
+      layerIndex: 6
+    - layerName: Layer 7 (Unused)
+      excludeFromSpawn: 0
+      layerIndex: 7
+    - layerName: Layer 8 (Unused)
+      excludeFromSpawn: 0
+      layerIndex: 8
+    - layerName: Layer 9 (Unused)
+      excludeFromSpawn: 0
+      layerIndex: 9
+    - layerName: Layer 10 (Unused)
+      excludeFromSpawn: 0
+      layerIndex: 10
+    - layerName: Layer 11 (Unused)
+      excludeFromSpawn: 0
+      layerIndex: 11
+    - layerName: Layer 12 (Unused)
+      excludeFromSpawn: 0
+      layerIndex: 12
+    - layerName: Layer 13 (Unused)
+      excludeFromSpawn: 0
+      layerIndex: 13
+    - layerName: Layer 14 (Unused)
+      excludeFromSpawn: 0
+      layerIndex: 14
+    - layerName: Layer 15 (Unused)
+      excludeFromSpawn: 0
+      layerIndex: 15
+    - layerName: Layer 16 (Unused)
+      excludeFromSpawn: 0
+      layerIndex: 16
+    - layerName: Layer 17 (Unused)
+      excludeFromSpawn: 0
+      layerIndex: 17
+    - layerName: Layer 18 (Unused)
+      excludeFromSpawn: 0
+      layerIndex: 18
+    - layerName: Layer 19 (Unused)
+      excludeFromSpawn: 0
+      layerIndex: 19
+    - layerName: Layer 20 (Unused)
+      excludeFromSpawn: 0
+      layerIndex: 20
+    - layerName: Layer 21 (Unused)
+      excludeFromSpawn: 0
+      layerIndex: 21
+    - layerName: Layer 22 (Unused)
+      excludeFromSpawn: 0
+      layerIndex: 22
+    - layerName: Layer 23 (Unused)
+      excludeFromSpawn: 0
+      layerIndex: 23
+    - layerName: Layer 24 (Unused)
+      excludeFromSpawn: 0
+      layerIndex: 24
+    - layerName: Layer 25 (Unused)
+      excludeFromSpawn: 0
+      layerIndex: 25
+    - layerName: Layer 26 (Unused)
+      excludeFromSpawn: 0
+      layerIndex: 26
+    - layerName: Layer 27 (Unused)
+      excludeFromSpawn: 0
+      layerIndex: 27
+    - layerName: Layer 28 (Unused)
+      excludeFromSpawn: 0
+      layerIndex: 28
+    - layerName: Layer 29 (Unused)
+      excludeFromSpawn: 0
+      layerIndex: 29
+    - layerName: Layer 30 (Unused)
+      excludeFromSpawn: 0
+      layerIndex: 30
+    - layerName: Layer 31 (Unused)
+      excludeFromSpawn: 0
+      layerIndex: 31
+    randomSeed: 0
+    useRandomSeed: 0
+    showDebugGizmos: 1
+    showGroundRays: 1
+    placementAreaColor: {r: 0, g: 1, b: 0, a: 0.2}
+    clusterCenterColor: {r: 1, g: 0, b: 0, a: 1}
+    exclusionZoneColor: {r: 1, g: 0, b: 0, a: 0.3}
+    groundRayColor: {r: 0, g: 0, b: 1, a: 1}
+    destroyPreviousSpawns: 1
 --- !u!4 &954979826
 Transform:
   m_ObjectHideFlags: 0
