@@ -1,10 +1,10 @@
-# CMPM147-SpawnGenerator
+# Cluster Spawn Generator - Procedural Generation
 
 A Unity **procedural spawn system** that places objects in clusters with terrain-aware positioning, exclusion zones, and layer-based filtering.
 
 ---
 
-## Overview
+## Overview | **[Tour Video](https://www.youtube.com/watch?v=4lv-HAgEDcE)**
 
 This project provides a flexible **clustered spawn generator** for Unity that distributes objects across a 3D placement area. Instead of random scattering, objects are grouped into clusters which is useful for generating natural-looking arrangements like vegetation or enemy placements. The system uses raycasts for ground detection and supports configurable exclusion zones and layer masking to avoid spawning on undesirable surfaces.
 
